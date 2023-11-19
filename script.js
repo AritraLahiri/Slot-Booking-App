@@ -5,15 +5,18 @@ const slotRemaining = document.getElementById("slotRem");
 const showSlot = document.getElementById("showSlot");
 const bookSlotDiv = document.getElementById("bookSlotDiv");
 const bookSlotForm = document.getElementById("bookSlotForm");
+const showBooking = document.getElementById("ShowBooking");
 // const itemList = document.getElementById("list-expense");
 fetchDataFromAPI();
+fetchAllBookingData();
 bookSlotForm.addEventListener("submit", addBooking);
 
 function addBooking(e) {
   e.preventDefault();
   const name = document.getElementById("userName").value;
   const email = document.getElementById("userEmail").value;
-  const slotID = document.getElementById("slotID").value;
+  const slotID = document.getElementById("slotID").innerText;
+  console.log(slotID);
   let userName = name;
   let userEmail = email;
   const userObj = { userName, userEmail, slotID };
@@ -35,6 +38,51 @@ function addBooking(e) {
 //   }
 //   return values;
 // }
+
+function fetchAllBookingData() {
+  axios.get("http://localhost:3000/show-booking").then((response) => {
+    console.log(response.data);
+    for (const user of response.data) {
+      if (user.Users.length > 0) {
+        for (const details of user.Users) {
+          let name = details.Name;
+          let email = details.Email;
+          let time = user.Time;
+          let link = user.Link;
+
+          let div = document.createElement("div");
+          let innerDiv = document.createElement("div");
+          let a = document.createElement("a");
+          let innerH5 = document.createElement("h5");
+          let innerh6 = document.createElement("h6");
+          //   // Add class
+          div.className = "card col";
+          innerDiv.className = "card-body";
+          innerH5.className = "card-title";
+          innerH5.innerText = name;
+          a.href = link;
+          a.innerText = "JOIN";
+          a.className = "btn btn-primary btn-sm";
+          innerh6.className = "card-subtitle mb-2 text-body-secondary";
+          innerh6.innerText = time;
+          div.style = "width: 15rem;";
+          var bookBtn = document.createElement("button");
+          bookBtn.className = "btn btn-danger btn-sm";
+          bookBtn.appendChild(document.createTextNode("Cancel"));
+          bookBtn.addEventListener("click", function () {
+            alert("Cancelled");
+          });
+          innerDiv.appendChild(innerH5);
+          innerDiv.appendChild(innerh6);
+          div.appendChild(innerDiv);
+          innerDiv.appendChild(bookBtn);
+          innerDiv.appendChild(a);
+          showBooking.appendChild(div);
+        }
+      }
+    }
+  });
+}
 
 function fetchDataFromAPI() {
   //const allExpenses = allStorage();

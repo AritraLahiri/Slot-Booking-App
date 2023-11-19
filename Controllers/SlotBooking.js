@@ -1,10 +1,19 @@
 const Slot = require("../Models/Slot");
 const User = require("../Models/User");
+const Sequelize = require("sequelize");
+const Op = Sequelize.Op;
+let Remaining = Slot.Remaining;
 
 exports.BookSlot = (req, res, next) => {
   const Name = req.body.userName;
   const Email = req.body.userEmail;
   const SlotID = req.body.slotID;
+  Slot.findByPk(SlotID)
+    .then((slot) => {
+      slot.update({ Remaining: slot.Remaining - 1 });
+    })
+    .catch((err) => console.log(err));
+
   User.create({
     Email,
     Name,
@@ -13,17 +22,46 @@ exports.BookSlot = (req, res, next) => {
   return res.json([]);
 };
 exports.getBookings = (req, res, next) => {
-  //   const Description = req.body.expenseDesc;
-  //   const Amount = req.body.expenseAmount;
-  //   const Category = req.body.expenseCategory;
-  //   Expense.create({
-  //     Description,
-  //     Amount,
-  //     Category,
-  //   });
-  //   return res.json([]);
+  Slot.findAll({ include: User })
+    .then((user) => {
+      res.json(user);
+    })
+    .catch((err) => console.log(err));
+};
+exports.deleteSlot = (req, res, next) => {
+  const slotId = req.params.slotID;
+  const userId = req.params.userID;
+  console.log(slotId);
+  Slot.update(
+    { Remaining: Remaining + 1 },
+    {
+      where: {
+        id: slotId,
+      },
+    }
+  )
+    .then(() => {
+      return User.findByPk(userId);
+    })
+    .then((user) => {
+      if (!user) {
+        res.json([{ Deleted: false }]);
+      }
+      return user.destroy();
+    })
+    .then(() => {
+      res.json([{ Deleted: true }]);
+    })
+    .catch((err) => console.log(err));
 };
 
+exports.getSlots = (req, res, next) => {
+  Slot.findAll({ where: { Remaining: { [Op.gt]: 0 } } })
+    .then((slot) => {
+      res.json(slot);
+    })
+    .catch((err) => console.log(err));
+};
 // exports.postAddProduct = (req, res, next) => {
 //   const title = req.body.title;
 //   const imageUrl = req.body.imageUrl;
@@ -38,29 +76,6 @@ exports.getBookings = (req, res, next) => {
 //     .then(() => res.redirect("/"))
 //     .catch((err) => console.log(err));
 // };
-
-exports.deleteSlot = (req, res, next) => {
-  const slotId = req.params.slotID;
-  //   console.log(expenseId);
-  //   Expense.findByPk(expenseId)
-  //     .then((expense) => {
-  //       res.header("Access-Control-Allow-Origin", "*");
-  //       res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-  //       res.header("Access-Control-Allow-Headers", "Content-Type");
-  //       if (!expense) {
-  //         res.json([{ Deleted: false }]);
-  //       }
-  //       return expense.destroy();
-  //     })
-  //     .then(() => {
-  //       res.header("Access-Control-Allow-Origin", "*");
-  //       res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-  //       res.header("Access-Control-Allow-Headers", "Content-Type");
-  //       console.log("DELETED SUCCESSFULLY");
-  //       res.json([{ Deleted: true }]);
-  //     })
-  //     .catch((err) => console.log(err));
-};
 
 // exports.getEditProduct = (req, res, next) => {
 //   const editMode = req.query.edit;
@@ -82,11 +97,3 @@ exports.deleteSlot = (req, res, next) => {
 //     })
 //     .catch((err) => console.log(err));
 // };
-
-exports.getSlots = (req, res, next) => {
-  Slot.findAll()
-    .then((slot) => {
-      res.json(slot);
-    })
-    .catch((err) => console.log(err));
-};

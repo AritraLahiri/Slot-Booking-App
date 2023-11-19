@@ -17,7 +17,6 @@ app.use(cors());
 app.use(route);
 
 // Slot.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
-User.hasMany(Slot);
 Slot.hasMany(User);
 
 sequelize
